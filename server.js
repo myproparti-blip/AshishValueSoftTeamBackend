@@ -94,6 +94,9 @@ app.use(async (req, res, next) => {
 import authRoutes from "./routes/authRoutes.js";
 app.use("/api/auth", authRoutes); // LOGIN IS PUBLIC
 
+import deepseekStream from "./routes/deepSeekStream.js";
+app.use("/api", deepseekStream); // AI STREAM IS PUBLIC
+
 // ---------------------------------------------------
 // AUTH MIDDLEWARE (PROTECT EVERYTHING BELOW)
 // ---------------------------------------------------
@@ -109,7 +112,6 @@ import billRoutes from "./routes/billRoutes.js";
 import ubiApfRoutes from "./routes/ubiApfRoutes.js";
 import valuationRoutes from "./routes/ubiShopRoutes.js";
 import bofMaharastraRoutes from "./routes/bomFlatRoutes.js";
-import deepseekStream from "./routes/deepSeekStream.js";
 
 app.use("/api/valuations", valuationRoutes);
 app.use("/api/images", imageRoutes);
@@ -117,7 +119,6 @@ app.use("/api/options", customOptionsRoutes);
 app.use("/api/bills", billRoutes);
 app.use("/api/ubi-apf", ubiApfRoutes);
 app.use("/api/bof-maharashtra", bofMaharastraRoutes);
-app.use("/api", deepseekStream);
 
 // ---------------------------------------------------
 // ROOT CHECK

@@ -15,25 +15,69 @@ router.get("/free-stream-ai", async (req, res) => {
   res.setHeader("Connection", "keep-alive");
 
   try {
+    // Using Groq Free API - No credit card required
+    const groqApiKey = process.env.GROQ_API_KEY;
+    
+    console.log("🔍 Checking GROQ_API_KEY...");
+    console.log("✅ GROQ_API_KEY exists:", !!groqApiKey);
+    if (groqApiKey) {
+      console.log("✅ Key starts with:", groqApiKey.substring(0, 10) + "...");
+      console.log("✅ Key length:", groqApiKey.length);
+    }
+    
+    if (!groqApiKey) {
+      console.error("❌ GROQ_API_KEY not configured");
+      res.write(`data: ERROR - ${JSON.stringify({ message: "Groq API key not configured. Set GROQ_API_KEY in .env.development" })}\n\n`);
+      res.end();
+      return;
+    }
+    
     const response = await axios({
-      url: "https://api.deepseek.com/v1/chat/completions",
+      url: "https://api.groq.com/openai/v1/chat/completions",
       method: "POST",
       responseType: "stream",
       headers: {
-        "Authorization": `Bearer ${process.env.DEEPSEEK_API_KEY}`,
+        "Authorization": `Bearer ${groqApiKey}`,
         "Content-Type": "application/json"
       },
       data: {
-        model: "deepseek-chat",
+        model: "llama-3.1-8b-instant",
+        messages: [{ role: "user", content: prompt }],
         stream: true,
-        messages: [{ role: "user", content: prompt }]
-      }
+        max_tokens: 500,
+        temperature: 0.7
+      },
+      timeout: 30000
     });
 
     response.data.on("data", (chunk) => {
       const text = chunk.toString();
       if (text.trim()) {
-        res.write(`data: ${text}\n\n`);
+        try {
+          // Groq uses SSE format: data: {...json...}
+          const lines = text.split('\n').filter(line => line.trim());
+          lines.forEach(line => {
+            if (line.startsWith('data: ')) {
+              const jsonStr = line.slice(6); // Remove "data: " prefix
+              
+              if (jsonStr === '[DONE]') {
+                return; // Stream complete marker
+              }
+              
+              try {
+                const parsed = JSON.parse(jsonStr);
+                if (parsed.choices && parsed.choices[0]?.delta?.content) {
+                  const token = parsed.choices[0].delta.content;
+                  res.write(`data: ${token}\n\n`);
+                }
+              } catch (e) {
+                console.error("Parse error on line:", jsonStr.slice(0, 100));
+              }
+            }
+          });
+        } catch (e) {
+          console.error("Stream parse error:", e.message);
+        }
       }
     });
 
@@ -50,13 +94,23 @@ router.get("/free-stream-ai", async (req, res) => {
 
   } catch (err) {
     console.error("DeepSeek API error:", err.response?.data || err.message);
-    res.write(
-      `data: ERROR - ${JSON.stringify({
-        message: err.message,
-        status: err.response?.status,
-        data: err.response?.data
-      })}\n\n`
-    );
+    const errorResponse = {
+      message: err.message || "Unknown error",
+      status: err.response?.status || "Unknown"
+    };
+    
+    // Safely extract data if it exists
+    if (err.response?.data) {
+      try {
+        errorResponse.data = typeof err.response.data === 'string' 
+          ? err.response.data 
+          : JSON.stringify(err.response.data);
+      } catch (e) {
+        errorResponse.data = "Unable to parse error data";
+      }
+    }
+    
+    res.write(`data: ERROR - ${JSON.stringify(errorResponse)}\n\n`);
     res.end();
   }
 });
