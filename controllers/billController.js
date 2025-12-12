@@ -13,6 +13,12 @@ export const createBill = async (req, res) => {
       });
     }
 
+    console.log("[billController] Creating bill with request data:", {
+      hasSelectedRecords: !!req.body.selectedRecords,
+      selectedRecordsCount: req.body.selectedRecords?.length || 0,
+      selectedRecords: req.body.selectedRecords
+    });
+
     // Generate bill number if not provided
     let billNumber = req.body.billNumber;
     if (!billNumber) {
@@ -153,6 +159,12 @@ export const updateBill = async (req, res) => {
         message: "Forbidden - Only managers and admin can update bills",
       });
     }
+
+    console.log("[billController] Updating bill with request data:", {
+      hasSelectedRecords: !!req.body.selectedRecords,
+      selectedRecordsCount: req.body.selectedRecords?.length || 0,
+      selectedRecords: req.body.selectedRecords
+    });
 
     let updateData = { ...req.body };
     delete updateData._id;

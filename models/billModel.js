@@ -15,6 +15,16 @@ const bankDetailsSchema = new mongoose.Schema({
   accountNo: { type: String, default: "" },
   ifscCode: { type: String, default: "" }
 }, { _id: false });
+const selectedRecordSchema = new mongoose.Schema({
+  clnt: { type: String, default: "" },
+  addr: { type: String, default: "" },
+  mobile: { type: String, default: "" },
+  bank: { type: String, default: "" },
+  city: { type: String, default: "" },
+  fee: { type: String, default: "" },
+  leadNumber: { type: String, default: "" },
+  _id: { type: String, default: "" }
+}, { _id: false });
 const billSchema = new mongoose.Schema({
   clientId: { type: String, required: true, index: true },
   billNumber: { type: String, required: true },
@@ -29,13 +39,14 @@ const billSchema = new mongoose.Schema({
   billToGstin: { type: String, default: "" },
   billToPan: { type: String, default: "" },
     items: [billItemSchema],
-    totalAmount: { type: Number, default: 0 },
-  totalCgst: { type: Number, default: 0 },
-  totalSgst: { type: Number, default: 0 },
-  totalIgst: { type: Number, default: 0 },
-  totalGst: { type: Number, default: 0 },
-  totalAmountInWords: { type: String, default: "" },
-  grandTotal: { type: Number, default: 0 },
+     selectedRecords: [selectedRecordSchema],
+     totalAmount: { type: Number, default: 0 },
+    totalCgst: { type: Number, default: 0 },
+    totalSgst: { type: Number, default: 0 },
+    totalIgst: { type: Number, default: 0 },
+    totalGst: { type: Number, default: 0 },
+    totalAmountInWords: { type: String, default: "" },
+    grandTotal: { type: Number, default: 0 },
     otherReference: { type: String, default: "" },
   billFinancialYear: { type: String, default: "" },
     bankDetails: bankDetailsSchema,
