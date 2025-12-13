@@ -390,6 +390,7 @@ const ubiApfSchema = new mongoose.Schema({
 
     propertyImages: [mongoose.Schema.Types.Mixed],
     locationImages: [mongoose.Schema.Types.Mixed],
+    documentPreviews: [mongoose.Schema.Types.Mixed],
     photos: { type: ubiApfPhotoSchema, default: () => ({}) },
     status: {
         type: String,

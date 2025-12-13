@@ -356,6 +356,7 @@ const bofMaharastraSchema = new mongoose.Schema({
     // IMAGES
     propertyImages: [mongoose.Schema.Types.Mixed],
     locationImages: [mongoose.Schema.Types.Mixed],
+    documentPreviews: [mongoose.Schema.Types.Mixed],
     photos: { type: bofPhotoSchema, default: () => ({}) },
 
     // STATUS TRACKING
