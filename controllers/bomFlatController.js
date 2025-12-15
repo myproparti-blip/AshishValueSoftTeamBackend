@@ -640,12 +640,111 @@ export const requestReworkBofMaharashtra = async (req, res) => {
             message: "Rework requested successfully",
             data: updatedForm
         });
-    } catch (error) {
+        } catch (error) {
         console.error("[requestReworkBofMaharashtra] Error:", error);
         res.status(500).json({
             success: false,
             message: "Failed to request rework",
             error: error.message
         });
-    }
-};
+        }
+        };
+
+        export const deleteBofMaharashtra = async (req, res) => {
+        try {
+        const { id } = req.params;
+        const clientId = req.user?.clientId;
+        const username = req.user?.username;
+
+        if (!clientId) {
+           return res.status(401).json({
+               success: false,
+               message: "Unauthorized - Missing client information"
+           });
+        }
+
+        // Find and delete - try _id first, then uniqueId
+        let deletedForm;
+        try {
+           deletedForm = await BofMaharastraModel.findByIdAndDelete(id);
+        } catch (idError) {
+           deletedForm = await BofMaharastraModel.findOneAndDelete({ uniqueId: String(id) });
+        }
+
+        if (!deletedForm) {
+           return res.status(404).json({
+               success: false,
+               message: "BOF Maharashtra form not found"
+           });
+        }
+
+        // CLIENT ISOLATION - Verify record belonged to requesting client
+        if (deletedForm.clientId !== clientId) {
+           return res.status(403).json({
+               success: false,
+               message: "Unauthorized - Record belongs to different client"
+           });
+        }
+
+        console.log(`[deleteBofMaharashtra] Deleted by ${username}:`, { id, clientId: clientId.substring(0, 8) + "..." });
+
+        res.status(200).json({
+           success: true,
+           message: "BOF Maharashtra form deleted successfully",
+           data: deletedForm
+        });
+        } catch (error) {
+        console.error("[deleteBofMaharashtra] Error:", error);
+        res.status(500).json({
+           success: false,
+           message: "Failed to delete BOF Maharashtra form",
+           error: error.message
+        });
+        }
+        };
+
+        export const deleteMultipleBofMaharashtra = async (req, res) => {
+        try {
+        const { ids } = req.body;
+        const clientId = req.user?.clientId;
+        const username = req.user?.username;
+
+        if (!Array.isArray(ids) || ids.length === 0) {
+           return res.status(400).json({
+               success: false,
+               message: "Invalid request - ids must be a non-empty array"
+           });
+        }
+
+        if (!clientId) {
+           return res.status(401).json({
+               success: false,
+               message: "Unauthorized - Missing client information"
+           });
+        }
+
+        // Delete multiple records
+        const result = await BofMaharastraModel.deleteMany({
+           $or: [
+               { _id: { $in: ids } },
+               { uniqueId: { $in: ids.map(String) } }
+           ],
+           clientId: clientId
+        });
+
+        console.log(`[deleteMultipleBofMaharashtra] Deleted by ${username}:`, { count: result.deletedCount, clientId: clientId.substring(0, 8) + "..." });
+
+        res.status(200).json({
+           success: true,
+           message: `Deleted ${result.deletedCount} BOF Maharashtra record(s)`,
+           deletedCount: result.deletedCount
+        });
+        } catch (error) {
+        console.error("[deleteMultipleBofMaharashtra] Error:", error);
+        res.status(500).json({
+           success: false,
+           message: "Failed to delete BOF Maharashtra forms",
+           error: error.message
+        });
+        }
+        };

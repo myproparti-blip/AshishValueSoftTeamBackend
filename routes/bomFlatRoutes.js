@@ -6,7 +6,9 @@ import {
     getAllBofMaharashtra,
     updateBofMaharashtra,
     managerSubmitBofMaharashtra,
-    requestReworkBofMaharashtra
+    requestReworkBofMaharashtra,
+    deleteBofMaharashtra,
+    deleteMultipleBofMaharashtra
 } from "../controllers/bomFlatController.js";
 import { authMiddleware, isManagerOrAdmin } from "../middleware/authMiddleware.js";
 
@@ -52,5 +54,11 @@ router.post("/:id/manager-submit", authMiddleware, isManagerOrAdmin, managerSubm
 
 // Manager/Admin request rework (only for approved items)
 router.post("/:id/request-rework", authMiddleware, isManagerOrAdmin, requestReworkBofMaharashtra);
+
+// Delete multiple BOF Maharashtra (must be before single delete)
+router.post("/bulk/delete", authMiddleware, deleteMultipleBofMaharashtra);
+
+// Delete single BOF Maharashtra
+router.delete("/:id", authMiddleware, deleteBofMaharashtra);
 
 export default router;

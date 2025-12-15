@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import { createUbiShop, getUbiShopById, updateUbiShop, managerSubmitUbiShop, requestUbiShopRework, getAllUbiShops } from "../controllers/ubiShopController.js";
+import { createUbiShop, getUbiShopById, updateUbiShop, managerSubmitUbiShop, requestUbiShopRework, getAllUbiShops, deleteUbiShop, deleteMultipleUbiShops } from "../controllers/ubiShopController.js";
 import { authMiddleware, isManagerOrAdmin } from "../middleware/authMiddleware.js";
 
 // FILE UPLOAD HANDLER
@@ -46,5 +46,11 @@ router.post("/:id/manager-submit", authMiddleware, isManagerOrAdmin, managerSubm
 
 // Manager/Admin request rework (only for approved items)
 router.post("/:id/request-rework", authMiddleware, isManagerOrAdmin, requestUbiShopRework);
+
+// Delete multiple UbiShops (must be before single delete)
+router.post("/bulk/delete", authMiddleware, deleteMultipleUbiShops);
+
+// Delete single UbiShop
+router.delete("/:id", authMiddleware, deleteUbiShop);
 
 export default router;

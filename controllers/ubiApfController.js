@@ -649,3 +649,102 @@ export const requestReworkUbiApfForm = async (req, res) => {
          });
      }
  };
+
+export const deleteUbiApfForm = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const clientId = req.user?.clientId;
+        const username = req.user?.username;
+
+        if (!clientId) {
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized - Missing client information"
+            });
+        }
+
+        // Find and delete - try _id first, then uniqueId
+        let deletedForm;
+        try {
+            deletedForm = await UbiApfModel.findByIdAndDelete(id);
+        } catch (idError) {
+            deletedForm = await UbiApfModel.findOneAndDelete({ uniqueId: String(id) });
+        }
+
+        if (!deletedForm) {
+            return res.status(404).json({
+                success: false,
+                message: "UBI APF form not found"
+            });
+        }
+
+        // CLIENT ISOLATION - Verify record belonged to requesting client
+        if (deletedForm.clientId !== clientId) {
+            return res.status(403).json({
+                success: false,
+                message: "Unauthorized - Record belongs to different client"
+            });
+        }
+
+        console.log(`[deleteUbiApfForm] Deleted by ${username}:`, { id, clientId: clientId.substring(0, 8) + "..." });
+
+        res.status(200).json({
+            success: true,
+            message: "UBI APF form deleted successfully",
+            data: deletedForm
+        });
+    } catch (error) {
+        console.error("[deleteUbiApfForm] Error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to delete UBI APF form",
+            error: error.message
+        });
+    }
+};
+
+export const deleteMultipleUbiApfForms = async (req, res) => {
+    try {
+        const { ids } = req.body;
+        const clientId = req.user?.clientId;
+        const username = req.user?.username;
+
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid request - ids must be a non-empty array"
+            });
+        }
+
+        if (!clientId) {
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized - Missing client information"
+            });
+        }
+
+        // Delete multiple records
+        const result = await UbiApfModel.deleteMany({
+            $or: [
+                { _id: { $in: ids } },
+                { uniqueId: { $in: ids.map(String) } }
+            ],
+            clientId: clientId
+        });
+
+        console.log(`[deleteMultipleUbiApfForms] Deleted by ${username}:`, { count: result.deletedCount, clientId: clientId.substring(0, 8) + "..." });
+
+        res.status(200).json({
+            success: true,
+            message: `Deleted ${result.deletedCount} UBI APF record(s)`,
+            deletedCount: result.deletedCount
+        });
+    } catch (error) {
+        console.error("[deleteMultipleUbiApfForms] Error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to delete UBI APF forms",
+            error: error.message
+        });
+    }
+};

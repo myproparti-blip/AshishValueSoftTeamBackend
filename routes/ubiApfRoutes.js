@@ -6,7 +6,9 @@ import {
     getAllUbiApfForms,
     updateUbiApfForm,
     managerSubmitUbiApfForm,
-    requestReworkUbiApfForm
+    requestReworkUbiApfForm,
+    deleteUbiApfForm,
+    deleteMultipleUbiApfForms
 } from "../controllers/ubiApfController.js";
 import { authMiddleware, isManagerOrAdmin } from "../middleware/authMiddleware.js";
 const storage = multer.memoryStorage();
@@ -46,5 +48,11 @@ router.post("/:id/manager-submit", authMiddleware, isManagerOrAdmin, managerSubm
 
 // Manager/Admin request rework (only for approved items)
 router.post("/:id/request-rework", authMiddleware, isManagerOrAdmin, requestReworkUbiApfForm);
+
+// Delete multiple UBI APF (must be before single delete)
+router.post("/bulk/delete", authMiddleware, deleteMultipleUbiApfForms);
+
+// Delete single UBI APF
+router.delete("/:id", authMiddleware, deleteUbiApfForm);
 
 export default router;

@@ -536,13 +536,112 @@ export const requestUbiShopRework = async (req, res) => {
             message: "Rework requested successfully",
             data: updatedUbiShop
         });
-    } catch (error) {
+        } catch (error) {
         console.error("[requestUbiShopRework] Error:", error);
         res.status(500).json({
             success: false,
             message: "Failed to request rework",
             error: error.message
         });
-    }
-};
+        }
+        };
+
+        export const deleteUbiShop = async (req, res) => {
+        try {
+        const { id } = req.params;
+        const clientId = req.user?.clientId;
+        const username = req.user?.username;
+
+        if (!clientId) {
+           return res.status(401).json({
+               success: false,
+               message: "Unauthorized - Missing client information"
+           });
+        }
+
+        // Find and delete - try _id first, then uniqueId
+        let deletedUbiShop;
+        try {
+           deletedUbiShop = await UbiShopModel.findByIdAndDelete(id);
+        } catch (idError) {
+           deletedUbiShop = await UbiShopModel.findOneAndDelete({ uniqueId: String(id) });
+        }
+
+        if (!deletedUbiShop) {
+           return res.status(404).json({
+               success: false,
+               message: "UbiShop not found"
+           });
+        }
+
+        // CLIENT ISOLATION - Verify record belonged to requesting client
+        if (deletedUbiShop.clientId !== clientId) {
+           return res.status(403).json({
+               success: false,
+               message: "Unauthorized - Record belongs to different client"
+           });
+        }
+
+        console.log(`[deleteUbiShop] Deleted by ${username}:`, { id, clientId: clientId.substring(0, 8) + "..." });
+
+        res.status(200).json({
+           success: true,
+           message: "UbiShop deleted successfully",
+           data: deletedUbiShop
+        });
+        } catch (error) {
+        console.error("[deleteUbiShop] Error:", error);
+        res.status(500).json({
+           success: false,
+           message: "Failed to delete UbiShop",
+           error: error.message
+        });
+        }
+        };
+
+        export const deleteMultipleUbiShops = async (req, res) => {
+        try {
+        const { ids } = req.body;
+        const clientId = req.user?.clientId;
+        const username = req.user?.username;
+
+        if (!Array.isArray(ids) || ids.length === 0) {
+           return res.status(400).json({
+               success: false,
+               message: "Invalid request - ids must be a non-empty array"
+           });
+        }
+
+        if (!clientId) {
+           return res.status(401).json({
+               success: false,
+               message: "Unauthorized - Missing client information"
+           });
+        }
+
+        // Delete multiple records
+        const result = await UbiShopModel.deleteMany({
+           $or: [
+               { _id: { $in: ids } },
+               { uniqueId: { $in: ids.map(String) } }
+           ],
+           clientId: clientId
+        });
+
+        console.log(`[deleteMultipleUbiShops] Deleted by ${username}:`, { count: result.deletedCount, clientId: clientId.substring(0, 8) + "..." });
+
+        res.status(200).json({
+           success: true,
+           message: `Deleted ${result.deletedCount} UbiShop record(s)`,
+           deletedCount: result.deletedCount
+        });
+        } catch (error) {
+        console.error("[deleteMultipleUbiShops] Error:", error);
+        res.status(500).json({
+           success: false,
+           message: "Failed to delete UbiShops",
+           error: error.message
+        });
+        }
+        };
 
