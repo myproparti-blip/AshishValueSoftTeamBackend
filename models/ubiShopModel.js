@@ -394,6 +394,7 @@ const ubiShopSchema = new mongoose.Schema({
     coordinates: { type: coordinateSchema, default: () => ({}) },
     propertyImages: [mongoose.Schema.Types.Mixed],
     locationImages: [mongoose.Schema.Types.Mixed],
+    documentPreviews: [mongoose.Schema.Types.Mixed],
     photos: { type: photoSchema, default: () => ({}) },
     status: {
         type: String,
