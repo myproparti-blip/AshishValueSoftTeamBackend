@@ -3,7 +3,8 @@ services:
     name: server
     runtime: node
     rootDir: .
-    startCommand: npm install && npm run prod
+    buildCommand: npm install
+    startCommand: npm run prod
     envVars:
       - key: NODE_ENV
         value: production
