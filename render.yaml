@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: server
+    root: .
+    buildCommand: cd server && npm install
+    startCommand: cd server && npm run prod
+    envVars:
+      - key: NODE_ENV
+        value: production
