@@ -1,9 +1,12 @@
 services:
   - type: web
     name: server
-    root: .
+    runtime: node
+    rootDir: .
     buildCommand: npm install
     startCommand: npm run prod
     envVars:
       - key: NODE_ENV
         value: production
+      - key: PORT
+        value: 5001
